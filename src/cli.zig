@@ -86,4 +86,8 @@ fn parse_and_start(commands: []const command, options: []const option, args: [][
         if (debug) std.debug.print("Unknow command {s}\n", .{command_name});
         return CLIError.UnknownCommand;
     }
+
+    // get our non-nullable command
+    const cmd = detected_command.?;
+    if (debug) std.debug.print("Detected command: {s}\n", .{cmd.name});
 }
