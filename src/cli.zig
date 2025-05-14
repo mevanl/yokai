@@ -27,7 +27,7 @@ pub const option = struct {
 };
 
 // CLI Errors
-pub const Error = error{
+pub const CLIError = error{
     NoArgsProvided,
     UnknownCommand,
     UnknownOption,
@@ -36,4 +36,54 @@ pub const Error = error{
     CommandExecutionFailed,
     TooManyCommands,
     TooManyOptions,
+    FailedAllocation,
 };
+
+// Starts yokai CLI handler
+pub fn start(commands: []const command, options: []const option, debug: bool) CLIError!void {
+
+    // handle simple argument based errors
+    if (commands.len > MAX_COMMANDS) return CLIError.TooManyCommands;
+    if (options.len > MAX_OPTIONS) return CLIError.TooManyOptions;
+
+    // GPA
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const gpa_allocator = gpa.allocator();
+
+    // get our cmdline args
+    const args = std.process.argsAlloc(gpa_allocator) catch {
+        return CLIError.FailedAllocation;
+    };
+    defer std.process.argsFree(gpa_allocator, args);
+
+    try parse_and_start(commands, options, args, debug);
+}
+
+// take in arguments allocated with start
+fn parse_and_start(commands: []const command, options: []const option, args: [][:0]u8, debug: bool) CLIError!void {
+    // only arg is program name
+    if (args.len < 2) {
+        if (debug) std.debug.print("Please enter a command!\n", .{});
+        return CLIError.NoArgsProvided;
+    }
+
+    // extract command name (first arg is program name)
+    const command_name = args[1];
+    var detected_command: ?command = null;
+
+    // see if the command is in the list of valid commands
+    for (commands) |cmd| {
+        if (std.mem.eql(u8, cmd.name, command_name)) {
+            // match
+            detected_command = cmd;
+            break;
+        }
+    }
+
+    // not real command
+    if (detected_command == null) {
+        if (debug) std.debug.print("Unknow command {s}\n", .{command_name});
+        return CLIError.UnknownCommand;
+    }
+}
