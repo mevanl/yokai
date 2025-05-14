@@ -57,11 +57,11 @@ pub fn start(commands: []const command, options: []const option, debug: bool) CL
     };
     defer std.process.argsFree(gpa_allocator, args);
 
-    try parse_and_start(commands, options, args, debug);
+    try parse(commands, options, args, debug);
 }
 
 // take in arguments allocated with start
-fn parse_and_start(commands: []const command, options: []const option, args: [][:0]u8, debug: bool) CLIError!void {
+fn parse(commands: []const command, options: []const option, args: [][:0]u8, debug: bool) CLIError!void {
     // only arg is program name
     if (args.len < 2) {
         if (debug) std.debug.print("Please enter a command!\n", .{});
