@@ -87,7 +87,83 @@ fn parse(commands: []const command, options: []const option, args: [][:0]u8, deb
         return CLIError.UnknownCommand;
     }
 
-    // get our non-nullable command
+    // get our not null command
     const cmd = detected_command.?;
     if (debug) std.debug.print("Detected command: {s}\n", .{cmd.name});
+
+    // allocate memory on stack for remaining args
+    var detected_options: [MAX_OPTIONS]option = undefined; // we already know we have <= MAX_OPTIONS
+    var detected_length: usize = 0;
+    var i: usize = 2; // skip the program name, detected command
+
+    // Parse options and capture value
+    while (i < args.len) {
+        const arg = args[i];
+
+        // option starts with '-'
+        if (std.mem.startsWith(u8, arg, "-")) {
+            // this checks if argument has 2 --, if so skip it to get name, else its just one -
+            const option_name = if (std.mem.startsWith(u8, arg[1..], "-")) arg[2..] else arg[1..];
+            var matched_option: ?option = null;
+
+            // test our option name on the list of options (check if whole name is used or short hand 1 char.)
+            for (options) |opt| {
+                if (std.mem.eql(u8, option_name, opt.long) or (option_name == 1 and option_name[0] == opt.short)) {
+                    matched_option = opt;
+                    break;
+                }
+            }
+
+            // if found none
+            if (matched_option == null) {
+                if (debug) std.debug.print("Unknown option: {s}\n", .{arg});
+                return CLIError.UnknownOption;
+            }
+
+            // get our not null option
+            var opt = matched_option.?;
+
+            // what is the value given to the option
+            if (i + 1 < args.len and !std.mem.startsWith(u8, args[i + 1], "-")) {
+                opt.value = args[i + 1];
+                i += 1;
+            } else {
+                opt.value = "";
+            }
+
+            if (detected_length >= MAX_OPTIONS) {
+                return CLIError.TooManyOptions;
+            }
+
+            // store our opt
+            detected_options[detected_length] = opt;
+            detected_length += 1;
+        } else {
+            // opt doesnt start with -
+            if (debug) std.debug.print("Unexpected argument: {s}\n", .{arg});
+            return CLIError.UnexpectedArguement;
+        }
+
+        i += 1;
+    }
+
+    // just get the slice of options passed
+    const used_options = detected_options[0..detected_length];
+
+    // make sure for every required option, we have all of them in our used_options
+    for (cmd.required) |required| {
+        var found = false;
+
+        for (used_options) |opt| {
+            if (std.mem.eql(u8, required, opt.name)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            if (debug) std.debug.print("Missing required option: {s}\n", .{required});
+            return CLIError.MissingRequiredOption;
+        }
+    }
 }
