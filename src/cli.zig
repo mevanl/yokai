@@ -45,7 +45,7 @@ pub const CLIError = error{
 };
 
 // Starts yokai CLI handler
-pub fn start(commands: []const command, options: []const option, debug: bool) CLIError!parsed_result {
+pub fn start(commands: []const command, options: []const option, debug: bool) CLIError!void {
 
     // handle simple argument based errors
     if (commands.len > MAX_COMMANDS) return CLIError.TooManyCommands;
@@ -62,7 +62,9 @@ pub fn start(commands: []const command, options: []const option, debug: bool) CL
     };
     defer std.process.argsFree(gpa_allocator, args);
 
-    try parse(commands, options, args, debug);
+    const parse_result: parsed_result = try parse(commands, options, args, debug);
+
+    try execute(parse_result, debug);
 }
 
 // take in arguments allocated with start
@@ -173,4 +175,28 @@ fn parse(commands: []const command, options: []const option, args: [][:0]u8, deb
     }
 
     return parsed_result{ .command = cmd, .options = used_options };
+}
+
+fn execute(parse_result: parsed_result, debug: bool) CLIError!void {
+
+    // command and options dont go together
+    if (!parse_result.command.function(parse_result.options)) {
+        if (debug) std.debug.print("Mismatched command and options\n", .{});
+        return CLIError.CommandExecutionFailed;
+    }
+
+    // execute option functions
+    for (parse_result.options) |opt| {
+        if (opt.function == null) continue; // doesnt have a func
+
+        // pass opt value to its function, get result
+        const result = opt.function.?(opt.value);
+
+        if (!result) {
+            if (debug) std.debug.print("Option function execute failed: {s}\n", .{opt.name});
+            return CLIError.CommandExecutionFailed;
+        }
+    }
+
+    if (debug) std.debug.print("Command executed successfully: {s}\n", .{parse_result.command.name});
 }
