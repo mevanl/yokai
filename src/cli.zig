@@ -115,7 +115,7 @@ fn parse(commands: []const command, options: []const option, args: [][:0]u8, deb
 
             // test our option name on the list of options (check if whole name is used or short hand 1 char.)
             for (options) |opt| {
-                if (std.mem.eql(u8, option_name, opt.long) or (option_name == 1 and option_name[0] == opt.short)) {
+                if (std.mem.eql(u8, option_name, opt.long) or (option_name.len == 1 and option_name[0] == opt.short)) {
                     matched_option = opt;
                     break;
                 }
