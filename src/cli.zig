@@ -52,7 +52,7 @@ pub fn start(commands: []const command, options: []const option, debug: bool) CL
     if (options.len > MAX_OPTIONS) return CLIError.TooManyOptions;
 
     // GPA
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
     defer _ = gpa.deinit();
     const gpa_allocator = gpa.allocator();
 
