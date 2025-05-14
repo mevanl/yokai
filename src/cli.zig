@@ -26,6 +26,11 @@ pub const option = struct {
     const fn_type = *const fn ([]const u8) bool;
 };
 
+pub const parsed_result = struct {
+    command: command,
+    options: []option,
+};
+
 // CLI Errors
 pub const CLIError = error{
     NoArgsProvided,
@@ -40,7 +45,7 @@ pub const CLIError = error{
 };
 
 // Starts yokai CLI handler
-pub fn start(commands: []const command, options: []const option, debug: bool) CLIError!void {
+pub fn start(commands: []const command, options: []const option, debug: bool) CLIError!parsed_result {
 
     // handle simple argument based errors
     if (commands.len > MAX_COMMANDS) return CLIError.TooManyCommands;
@@ -61,7 +66,7 @@ pub fn start(commands: []const command, options: []const option, debug: bool) CL
 }
 
 // take in arguments allocated with start
-fn parse(commands: []const command, options: []const option, args: [][:0]u8, debug: bool) CLIError!void {
+fn parse(commands: []const command, options: []const option, args: [][:0]u8, debug: bool) CLIError!parsed_result {
     // only arg is program name
     if (args.len < 2) {
         if (debug) std.debug.print("Please enter a command!\n", .{});
@@ -166,4 +171,6 @@ fn parse(commands: []const command, options: []const option, args: [][:0]u8, deb
             return CLIError.MissingRequiredOption;
         }
     }
+
+    return parsed_result{ .command = cmd, .options = used_options };
 }
