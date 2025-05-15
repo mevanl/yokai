@@ -2,6 +2,6 @@
     .name = .mytest,
     .version = "0.0.1",
     .minimim_zig_version = "0.14.0",
-    .fingerprint = 0x5daf352dfa683bf3,
+    .fingerprint = 0x8519e8928cc8f11,
     .paths = .{ "build.zig", "build.zig.zon", "src" },
 }
