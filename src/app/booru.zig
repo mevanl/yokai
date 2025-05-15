@@ -1,5 +1,6 @@
 const std = @import("std");
 const json = std.json;
+const fs = std.fs;
 
 const Booru = struct {
     name: []const u8,
@@ -7,7 +8,12 @@ const Booru = struct {
     token: []const u8,
     buildURL: fn (self: *const Booru, allocator: std.mem.Allocator, tag: []const u8, limit: u32) BooruError![]u8,
     parsePosts: fn (allocator: std.mem.Allocator, body: []const u8) BooruError![]Post,
-    downloadPosts: fn (allocator: std.mem.Allocator, posts: []Post) BooruError!void,
+};
+
+pub const BooruError = error{
+    FailedURLBuild,
+    ParsingFailed,
+    DownloadFailed,
 };
 
 const Post = struct {
@@ -18,18 +24,37 @@ const Post = struct {
     tags: ?[]const u8,
 };
 
-pub const BooruError = error{
-    FailedURLBuild,
-    ParsingFailed,
-    DownloadFailed,
+pub fn freePosts(allocator: std.mem.Allocator, posts: []Post) void {
+    for (posts) |post| {
+        allocator.free(post.id);
+        allocator.free(post.file_url);
+        if (post.creator) |c| allocator.free(c);
+        if (post.rating) |r| allocator.free(r);
+        if (post.tags) |t| allocator.free(t);
+    }
+    allocator.free(posts);
+}
+
+fn tryDupeField(val: ?json.Value, allocator: std.mem.Allocator) BooruError!?[]u8 {
+    if (val != null and val.? == .string) {
+        return allocator.dupe(u8, val.?.string) catch |err| {
+            err = Booru.ParsingFailed;
+            return err;
+        };
+    }
+
+    return null;
+}
+
+pub const Gelbooru = Booru{
+    .name = "gelbooru",
+    .base_url = "https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1",
+    .token = "0",
+    .buildURL = gelbooruBuildURL,
+    .parsePosts = gelbooruParsePosts,
 };
 
-fn defaultBuildURL(
-    self: *const Booru,
-    allocator: std.mem.Allocator,
-    tags: []const u8,
-    limit: u32,
-) BooruError![]u8 {
+fn gelbooruBuildURL(self: *const Booru, allocator: std.mem.Allocator, tags: []const u8, limit: u32) BooruError![]u8 {
     const url = std.fmt.allocPrint(allocator, "{s}&limit={d}&tags={s}", .{ self.base_url, limit, tags }) catch |err| {
         // oom
         err = BooruError.FailedURLBuild;
@@ -37,14 +62,6 @@ fn defaultBuildURL(
     };
     return url;
 }
-
-pub const Gelbooru = Booru{
-    .name = "gelbooru",
-    .base_url = "https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1",
-    .token = "0",
-    .buildURL = defaultBuildURL,
-    .parsePosts = gelbooruParsePosts,
-};
 
 fn gelbooruParsePosts(allocator: std.mem.Allocator, body: []const u8) BooruError![]Post {
 
@@ -69,7 +86,7 @@ fn gelbooruParsePosts(allocator: std.mem.Allocator, body: []const u8) BooruError
         err = BooruError.ParsingFailed;
         return err;
     };
-    defer allocator.free(posts);
+    // defer allocator.free(posts); // caller will worry about posts lifetime
 
     // iterate over each posts object
     for (post_array, 0..) |item, i| {
@@ -89,12 +106,20 @@ fn gelbooruParsePosts(allocator: std.mem.Allocator, body: []const u8) BooruError
         // check strings (creator, rating, tags could be null)
         if (id_json_val != .string or file_url_json_val != .string) return BooruError.ParsingFailed;
 
+        // we will dupe the value here because
+        // after deinit the parsed_body they memory will go away
+        const id = allocator.dupe(u8, id_json_val.string) orelse return BooruError.ParsingFailed;
+        const file_url = allocator.dupe(u8, file_url_json_val.string) orelse return BooruError.ParsingFailed;
+        const creator = try tryDupeField(creator_json_val, allocator);
+        const rating = try tryDupeField(rating_json_val, allocator);
+        const tags = try tryDupeField(tags_json_val, allocator);
+
         posts[i] = Post{
-            .id = id_json_val.string,
-            .file_url = file_url_json_val.string,
-            .creator = if (creator_json_val != null and creator_json_val.? == .string) creator_json_val.?.string else null,
-            .rating = if (rating_json_val != null and rating_json_val.? == .string) rating_json_val.?.string orelse null,
-            .tags = if (tags_json_val != null and tags_json_val.? == .string) tags_json_val.?.string orelse null,
+            .id = id,
+            .file_url = file_url,
+            .creator = creator,
+            .rating = rating,
+            .tags = tags,
         };
     }
 
