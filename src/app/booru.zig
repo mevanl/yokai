@@ -17,9 +17,9 @@ pub const BooruError = error{
 };
 
 const Post = struct {
-    id: []const u8, // id is actually an int in json i think 
+    id: []const u8, // id is actually an int in json i think
     file_url: []const u8,
-    creator: ?[]const u8,
+    // creator: ?[]const u8,
     rating: ?[]const u8,
     tags: ?[]const u8,
 };
@@ -28,7 +28,7 @@ pub fn freePosts(allocator: std.mem.Allocator, posts: []Post) void {
     for (posts) |post| {
         allocator.free(post.id);
         allocator.free(post.file_url);
-        if (post.creator) |c| allocator.free(c);
+        // if (post.creator) |c| allocator.free(c);
         if (post.rating) |r| allocator.free(r);
         if (post.tags) |t| allocator.free(t);
     }
@@ -99,7 +99,7 @@ fn gelbooruParsePosts(allocator: std.mem.Allocator, body: []const u8) BooruError
         const id_json_val = post_obj.get("id") orelse return BooruError.ParsingFailed;
         const file_url_json_val = post_obj.get("file_url") orelse return BooruError.ParsingFailed;
 
-        const creator_json_val = post_obj.get("creator") orelse return BooruError.ParsingFailed;
+        // const creator_json_val = post_obj.get("creator") orelse return BooruError.ParsingFailed;
         const rating_json_val = post_obj.get("rating") orelse return BooruError.ParsingFailed;
         const tags_json_val = post_obj.get("tags") orelse return BooruError.ParsingFailed;
 
@@ -110,14 +110,14 @@ fn gelbooruParsePosts(allocator: std.mem.Allocator, body: []const u8) BooruError
         // after deinit the parsed_body they memory will go away
         const id = allocator.dupe(u8, id_json_val.string) orelse return BooruError.ParsingFailed;
         const file_url = allocator.dupe(u8, file_url_json_val.string) orelse return BooruError.ParsingFailed;
-        const creator = try tryDupeField(creator_json_val, allocator);
+        // const creator = try tryDupeField(creator_json_val, allocator);
         const rating = try tryDupeField(rating_json_val, allocator);
         const tags = try tryDupeField(tags_json_val, allocator);
 
         posts[i] = Post{
             .id = id,
             .file_url = file_url,
-            .creator = creator,
+            // .creator = creator,
             .rating = rating,
             .tags = tags,
         };
