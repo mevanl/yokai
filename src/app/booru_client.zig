@@ -49,9 +49,8 @@ const Client = struct {
             // url to post file
             const url = std.Uri.parse(post.file_url) catch return booru.BooruError.DownloadFailed;
 
-            const buffer: [1024 * 1024 * 4]u8 = undefined;
-
             // open and send request
+            const buffer: [1024 * 4]u8 = undefined;
             var req = self.http_client.open(.GET, url, .{ .server_header_buffer = buffer }) catch return booru.BooruError.DownloadFailed;
             defer req.deinit();
 
@@ -59,23 +58,28 @@ const Client = struct {
             try req.finish();
             try req.wait();
 
-            // allocate response
-            const res = try req.reader().readAllAlloc(self.allocator, 1024 * 1024 * 4);
-            defer self.allocator.free(res);
-
             // build file name
             const file_extension = getFileExtension(post.file_url) catch |err| return err;
             const file_name = std.fmt.allocPrint(self.allocator, "{s}{s}", .{ post.id, file_extension }) catch return booru.BooruError.DownloadFailed;
             defer self.allocator.free(file_name);
 
-            // write to file
+            // create output file
             var file = std.fs.cwd().createFile(file_name, .{ .exclusive = true }) catch |err| {
                 std.debug.print("Error creating file {s}, Error: {any}", .{ file_name, err });
                 continue;
             };
             defer file.close();
 
-            try file.writeAll(res);
+            // stream response to disk
+            const reader = req.reader();
+            const writer = file.writer();
+
+            var stream_buffer: [1024 * 1024]u8 = undefined;
+            while (true) {
+                const bytes_read = try reader.read(&stream_buffer);
+                if (bytes_read == 0) break; // finished reading
+                try writer.writeAll(stream_buffer[0..bytes_read]);
+            }
         }
     }
 };
