@@ -39,9 +39,52 @@ const Client = struct {
         return try self.booru_handler.parsePosts(self.allocator, body);
     }
 
-    pub fn downloadPosts(self: *Client, posts: []booru.Post) !void {
+    pub fn downloadPosts(self: *Client, posts: []booru.Post) booru.BooruError!void {
 
         // post is no longer needed after this
         defer booru.freePosts(self.allocator, posts);
+
+        for (posts) |post| {
+
+            // url to post file
+            const url = std.Uri.parse(post.file_url) catch return booru.BooruError.DownloadFailed;
+
+            const buffer: [1024 * 1024 * 4]u8 = undefined;
+
+            // open and send request
+            var req = self.http_client.open(.GET, url, .{ .server_header_buffer = buffer }) catch return booru.BooruError.DownloadFailed;
+            defer req.deinit();
+
+            try req.send();
+            try req.finish();
+            try req.wait();
+
+            // allocate response
+            const res = try req.reader().readAllAlloc(self.allocator, 1024 * 1024 * 4);
+            defer self.allocator.free(res);
+
+            // build file name
+            const file_extension = getFileExtension(post.file_url) catch |err| return err;
+            const file_name = std.fmt.allocPrint(self.allocator, "{s}{s}", .{ post.id, file_extension }) catch return booru.BooruError.DownloadFailed;
+            defer self.allocator.free(file_name);
+
+            // write to file
+            var file = std.fs.cwd().createFile(file_name, .{ .exclusive = true }) catch |err| {
+                std.debug.print("Error creating file {s}, Error: {any}", .{ file_name, err });
+                continue;
+            };
+            defer file.close();
+
+            try file.writeAll(res);
+        }
     }
 };
+
+fn getFileExtension(url: []const u8) booru.BooruError![]const u8 {
+    const last_dot = std.mem.lastIndexOfScalar(u8, url, '.');
+    if (last_dot) |i| {
+        return url[i..];
+    } else {
+        return booru.BooruError.DownloadFailed;
+    }
+}
