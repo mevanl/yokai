@@ -1,7 +1,10 @@
 // File: commands.zig
-// Purpose: Define commands for yokai
+// Purpose: Define commands for zooru
 const std = @import("std");
 const cli = @import("cli.zig");
+
+const booru = @import("app/booru.zig");
+const bclient = @import("app/booru_client.zig");
 
 pub const methods = struct {
 
@@ -33,7 +36,7 @@ pub const methods = struct {
         pub fn help_func(opts: []const cli.option) bool {
             _ = opts;
 
-            std.debug.print("Usage: yokai <command> [options]\n" ++
+            std.debug.print("Usage: zooru <command> [options]\n" ++
                 "Commands:\n" ++
                 "   hello   Greet someone\n" ++
                 "   help    Show this message\n\n" ++

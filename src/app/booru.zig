@@ -2,11 +2,11 @@ const std = @import("std");
 const json = std.json;
 const fs = std.fs;
 
-const Booru = struct {
+pub const Booru = struct {
     name: []const u8,
     base_url: []const u8,
     token: []const u8,
-    buildURL: fn (self: *const Booru, allocator: std.mem.Allocator, tag: []const u8, limit: u32) BooruError![]u8,
+    buildURL: fn (self: *Booru, allocator: std.mem.Allocator, tag: []const u8, limit: u32) BooruError![]u8,
     parsePosts: fn (allocator: std.mem.Allocator, body: []const u8) BooruError![]Post,
 };
 

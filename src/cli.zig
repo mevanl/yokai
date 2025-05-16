@@ -44,7 +44,7 @@ pub const CLIError = error{
     FailedAllocation,
 };
 
-// Starts yokai CLI handler
+// Starts zooru CLI handler
 pub fn start(commands: []const command, options: []const option, debug: bool) CLIError!void {
 
     // handle simple argument based errors

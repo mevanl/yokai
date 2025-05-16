@@ -10,7 +10,7 @@ const Client = struct {
     http_client: http.Client,
     booru_handler: *const booru.Booru,
 
-    pub fn init(allocator: std.mem.Allocator, booru_handler: *const booru.Booru) Client {
+    pub fn init(allocator: std.mem.Allocator, booru_handler: *booru.Booru) Client {
         return Client{
             .allocator = allocator,
             .http_client = http.Client{ .allocator = allocator },

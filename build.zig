@@ -13,7 +13,7 @@ pub fn build(b: *std.Build) void {
 
     // define our executable
     const exe = b.addExecutable(.{
-        .name = "yokai",
+        .name = "zooru",
         .root_module = exe_module,
     });
 

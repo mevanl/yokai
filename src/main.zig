@@ -5,14 +5,17 @@ const cmd = @import("commands.zig");
 pub fn main() !void {
 
     // define our programs commands
-    const commands = [_]cli.command{ cli.command{
-        .name = "hello",
-        .function = &cmd.methods.commands.hello_func,
-        .optional = &.{"name"},
-    }, cli.command{
-        .name = "help",
-        .function = &cmd.methods.commands.help_func,
-    } };
+    const commands = [_]cli.command{
+        cli.command{
+            .name = "hello",
+            .function = &cmd.methods.commands.hello_func,
+            .optional = &.{"name"},
+        },
+        cli.command{
+            .name = "help",
+            .function = &cmd.methods.commands.help_func,
+        },
+    };
 
     // define our programs options
     const options = [_]cli.option{
@@ -24,6 +27,6 @@ pub fn main() !void {
         },
     };
 
-    // start yokai
+    // start zooru cli
     try cli.start(&commands, &options, true);
 }
