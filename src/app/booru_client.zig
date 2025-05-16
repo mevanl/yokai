@@ -1,6 +1,7 @@
 const std = @import("std");
 const booru = @import("booru.zig");
 const http = std.http;
+const fs = std.fs;
 
 // Client handles the http component
 // Once getting the response body.

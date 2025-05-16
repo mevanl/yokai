@@ -17,7 +17,7 @@ pub const BooruError = error{
 };
 
 const Post = struct {
-    id: []const u8,
+    id: []const u8, // id is actually an int in json i think 
     file_url: []const u8,
     creator: ?[]const u8,
     rating: ?[]const u8,
