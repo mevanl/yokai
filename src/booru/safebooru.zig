@@ -33,10 +33,7 @@ pub const Safebooru = struct {
         };
         defer parsed_body.deinit();
 
-        // get posts from json (its an array)
-        const posts_json = parsed_body.value.object.get("post") orelse return booru.BooruError.ParsingFailed;
-        if (posts_json != .array) return booru.BooruError.ParsingFailed;
-        const posts_array = posts_json.array.items;
+        const posts_array = parsed_body.value.array.items;
 
         if (posts_array.len == 0) {
             return booru.BooruError.NoPostFound;

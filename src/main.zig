@@ -1,6 +1,7 @@
 const clap = @import("clap");
 const std = @import("std");
 const gelbooru = @import("booru/gelbooru.zig");
+const safebooru = @import("booru/safebooru.zig");
 const booru_client = @import("booru/client.zig");
 
 const stdout = std.io.getStdOut().writer();
@@ -75,6 +76,18 @@ pub fn main() !void {
         const gel = gelbooru.Gelbooru.instance();
 
         var client = booru_client.Client.init(allocator, &gel);
+        defer client.deinit();
+
+        client.downloadPosts(client.fetchBulkPosts(tags.?) catch return) catch |err| {
+            stderr.print("Failed downloading post (Source: {s}, tags: {s})\nError: {any}\n", .{ source.?, tags.?, err }) catch {
+                return;
+            };
+            return;
+        };
+    } else if (std.mem.eql(u8, source.?, "safebooru")) {
+        const safe = safebooru.Safebooru.instance();
+
+        var client = booru_client.Client.init(allocator, &safe);
         defer client.deinit();
 
         client.downloadPosts(client.fetchBulkPosts(tags.?) catch return) catch |err| {
