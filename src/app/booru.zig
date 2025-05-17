@@ -110,9 +110,7 @@ fn gelbooruParsePosts(allocator: std.mem.Allocator, body: []const u8) BooruError
         // after deinit the parsed_body they memory will go away
         const id = allocator.dupe(u8, id_json_val.string) orelse return BooruError.ParsingFailed;
         const file_url = allocator.dupe(u8, file_url_json_val.string) orelse return BooruError.ParsingFailed;
-        // const creator = try tryDupeField(creator_json_val, allocator);
-        const rating = try tryDupeField(rating_json_val, allocator);
-        const tags = try tryDupeField(tags_json_val, allocator);
+        // const creator = try tryDupeFielpostsld(tags_json_val, allocator);
 
         posts[i] = Post{
             .id = id,

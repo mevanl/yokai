@@ -4,8 +4,6 @@
 const std = @import("std");
 
 pub const Booru = struct {
-    name: []const u8,
-    base_url: []const u8,
     metadata: BooruMetadata,
 
     //buildSingleURL
@@ -15,6 +13,9 @@ pub const Booru = struct {
 };
 
 pub const BooruMetadata = struct {
+    name: []const u8,
+    base_url: []const u8,
+
     api_key: ?[]const u8,
     docs_url: ?[]const u8,
 
@@ -32,6 +33,7 @@ pub const BooruError = error{
     FailedURLBuild,
     ParsingFailed,
     OutOfMemory,
+    NoPostFound,
 
     RequestFailed,
     ResponseReadFailed,
