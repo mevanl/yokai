@@ -1,10 +1,13 @@
-// File: commands.zig
+// File:    commands.zig
 // Purpose: Define commands for zooru
 const std = @import("std");
 const cli = @import("cli.zig");
 
-const booru = @import("app/booru.zig");
-const bclient = @import("app/booru_client.zig");
+const gelbooru = @import("booru/gelbooru.zig");
+const booru_client = @import("booru/client.zig");
+
+const stdout = std.io.getStdOut().writer();
+const stderr = std.io.getStdErr().writer();
 
 pub const methods = struct {
 
@@ -42,6 +45,55 @@ pub const methods = struct {
                 "   help    Show this message\n\n" ++
                 "Options for hello\n" ++
                 "   -n, --name <value>  Name to greet\n", .{});
+
+            return true;
+        }
+
+        pub fn download_func(opts: []const cli.option) bool {
+            // GPA
+            var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+            defer _ = gpa.deinit();
+            const allocator = gpa.allocator();
+
+            var source: ?[]const u8 = null;
+            var tags: ?[]const u8 = null;
+
+            // get our option values
+            for (opts) |opt| {
+                // stdout.print("Got option: {s} = {s}\n", .{opt.name, opt.value}) catch return false;
+                if (std.mem.eql(u8, opt.name, "source")) {
+                    source = opt.value;
+                } else if (std.mem.eql(u8, opt.name, "tags")) {
+                    tags = opt.value;
+                }
+            }
+
+            if (source == null or tags == null) {
+                stdout.print("Missing required options.\n", .{}) catch return false;
+                return false;
+            }
+
+            stdout.print("Starting download from {s} with tags: {s}\n", .{ source.?, tags.? }) catch return false;
+
+            // do actual downloading
+            if (std.mem.eql(u8, source.?, "gelbooru")) {
+                const gel = gelbooru.Gelbooru.instance();
+
+                var client = booru_client.Client.init(allocator, &gel);
+                defer client.deinit();
+
+                client.downloadPosts(client.fetchBulkPosts(tags.?) catch return false) catch |err| {
+                    stderr.print("Failed downloading post (Source: {s}, tags: {s})\nError: {any}\n", .{ source.?, tags.?, err }) catch {
+                        return false;
+                    };
+                    return false;
+                };
+            } else {
+                stdout.print("Unsupported source: {s}\n", .{source.?}) catch {
+                    return false;
+                };
+                return false;
+            }
 
             return true;
         }

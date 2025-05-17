@@ -29,26 +29,22 @@ pub const Client = struct {
             return booru.BooruError.UnsupportedOperation;
         }
 
-        // unwrap functions to make sure they were implemented (still a runtime check however)
-        const build = self.handler.buildBulkURL orelse return booru.BooruError.UnsupportedOperation;
-        const parse = self.handler.parseBulkPost orelse return booru.BooruError.UnsupportedOperation;
-
         // hard coded limit for now
-        const url = try build(self.handler, self.allocator, tags, 5);
+        const url = try self.handler.buildBulkURL(self.handler, self.allocator, tags, 5);
         defer self.allocator.free(url);
 
         const body = try self.getBulkBody(url);
         defer self.allocator.free(body);
 
-        return try parse(self.allocator, body);
+        return try self.handler.parseBulkPost(self.allocator, body);
     }
 
     pub fn downloadPost(self: *Client, post: booru.Post) booru.BooruError!void {
         const url = std.Uri.parse(post.file_url) catch return booru.BooruError.DownloadFailed;
 
         // make and send our request
-        const header_buffer: [1024 * 4]u8 = undefined;
-        var req = self.http_client.open(.GET, url, .{ .server_header_buffer = header_buffer }) catch return booru.BooruError.RequestFailed;
+        var header_buffer: [1024 * 4]u8 = undefined;
+        var req = self.http_client.open(.GET, url, .{ .server_header_buffer = &header_buffer }) catch return booru.BooruError.RequestFailed;
         defer req.deinit();
 
         req.send() catch return booru.BooruError.RequestFailed;
@@ -56,12 +52,12 @@ pub const Client = struct {
         req.wait() catch return booru.BooruError.RequestFailed;
 
         // create file for res data
-        const file_extension = try self.getFileExtension(post.file_url);
-        const file_name = std.fmt.allocPrint(self.allocator, "{s}{s}", .{ post.id, file_extension }) catch return booru.BooruError.OutOfMemory;
+        const file_extension = try getFileExtension(post.file_url);
+        const file_name = std.fmt.allocPrint(self.allocator, "{d}{s}", .{ post.id, file_extension }) catch return booru.BooruError.OutOfMemory;
         defer self.allocator.free(file_name);
 
         var file = std.fs.cwd().createFile(file_name, .{ .exclusive = true }) catch |err| {
-            stderr.print("Error creating file {s}. Error: {any}\n", .{ file_name, err });
+            stderr.print("Error creating file {s}. Error: {any}\n", .{ file_name, err }) catch return booru.BooruError.DownloadFailed;
             return booru.BooruError.DownloadFailed;
         };
         defer file.close();
@@ -72,9 +68,9 @@ pub const Client = struct {
 
         var stream_buffer: [1024 * 1024]u8 = undefined;
         while (true) {
-            const bytes_read = try reader.read(&stream_buffer);
+            const bytes_read = reader.read(&stream_buffer) catch return booru.BooruError.DownloadFailed;
             if (bytes_read == 0) break;
-            try writer.writeAll(stream_buffer[0..bytes_read]);
+            writer.writeAll(stream_buffer[0..bytes_read]) catch return booru.BooruError.DownloadFailed;
         }
     }
 
@@ -83,7 +79,7 @@ pub const Client = struct {
 
         for (posts) |post| {
             self.downloadPost(post) catch {
-                stderr.print("Error download post: {s}\n", .{post.id});
+                stderr.print("Error download post: {d}\n", .{post.id}) catch continue;
             };
         }
     }
@@ -91,7 +87,8 @@ pub const Client = struct {
     fn getBulkBody(self: *Client, url: []const u8) booru.BooruError![]u8 {
         const parsed = std.Uri.parse(url) catch return booru.BooruError.FailedURLBuild;
 
-        var req = self.http_client.open(.GET, parsed, .{}) catch return booru.BooruError.RequestFailed;
+        var header_buffer: [1024 * 4]u8 = undefined;
+        var req = self.http_client.open(.GET, parsed, .{ .server_header_buffer = &header_buffer }) catch return booru.BooruError.RequestFailed;
         defer req.deinit();
 
         req.send() catch return booru.BooruError.RequestFailed;

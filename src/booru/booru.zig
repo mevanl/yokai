@@ -3,13 +3,15 @@
 //          Booru errors, and helper functions for them.
 const std = @import("std");
 
+// needed for @as in implementations of Booru
+
 pub const Booru = struct {
     metadata: BooruMetadata,
 
     //buildSingleURL
     //parseSinglePost
-    buildBulkURL: ?fn (self: *const Booru, allocator: std.mem.Allocator, tags: []const u8, limit: u32) BooruError![]u8,
-    parseBulkPost: ?fn (allocator: std.mem.Allocator, body: []const u8) BooruError![]Post,
+    buildBulkURL: *const fn (self: *const Booru, allocator: std.mem.Allocator, tags: []const u8, limit: u32) BooruError![]u8,
+    parseBulkPost: *const fn (allocator: std.mem.Allocator, body: []const u8) BooruError![]Post,
 };
 
 pub const BooruMetadata = struct {
@@ -24,7 +26,7 @@ pub const BooruMetadata = struct {
 };
 
 pub const Post = struct {
-    id: ?[]const u8, // u32 maybe if all boorus are uint
+    id: i64, // u32 maybe if all boorus are uint
     file_url: []const u8, // direct link to media itself,
 };
 
@@ -43,7 +45,7 @@ pub const BooruError = error{
 
 pub fn freePosts(allocator: std.mem.Allocator, posts: []Post) void {
     for (posts) |post| {
-        allocator.free(post.id);
+        // allocator.free(post.id);
         allocator.free(post.file_url);
     }
 

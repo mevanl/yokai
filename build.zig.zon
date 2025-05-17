@@ -1,7 +1,13 @@
 .{
     .name = .zooru,
     .version = "0.0.1",
+    .dependencies = .{
+        .clap = .{
+            .url = "https://github.com/Hejsil/zig-clap/archive/refs/tags/0.10.0.tar.gz",
+            .hash = "clap-0.10.0-oBajB434AQBDh-Ei3YtoKIRxZacVPF1iSwp3IX_ZB8f0",
+        },
+    },
     .minimim_zig_version = "0.14.0",
-    .fingerprint = 0x5daf352dfa683bf3,
+    .fingerprint = 0x68e8fafc12b24c3c,
     .paths = .{ "build.zig", "build.zig.zon", "src" },
 }

@@ -18,7 +18,7 @@ pub const Gelbooru = struct {
         tags: []const u8,
         limit: u32,
     ) booru.BooruError![]u8 {
-        return std.fmt.allocPrint(allocator, "{s}&limit={s}&tags={s}", .{ self.metadata.base_url, limit, tags }) catch {
+        return std.fmt.allocPrint(allocator, "{s}&limit={d}&tags={s}", .{ self.metadata.base_url, limit, tags }) catch {
             return booru.BooruError.OutOfMemory;
         };
     }
@@ -35,7 +35,7 @@ pub const Gelbooru = struct {
         defer parsed_body.deinit();
 
         // get posts from json (its an array)
-        const posts_json = parsed_body.object.get("post") orelse return booru.BooruError.ParsingFailed;
+        const posts_json = parsed_body.value.object.get("post") orelse return booru.BooruError.ParsingFailed;
         if (posts_json != .array) return booru.BooruError.ParsingFailed;
         const posts_array = posts_json.array.items;
 
@@ -60,11 +60,11 @@ pub const Gelbooru = struct {
             const file_url_json = post_obj.get("file_url") orelse return booru.BooruError.ParsingFailed;
 
             // check both are strings
-            if (id_json != .string or file_url_json != .string) return booru.BooruError.ParsingFailed;
+            if (id_json != .integer or file_url_json != .string) return booru.BooruError.ParsingFailed;
 
             // duplicate them
-            const id = allocator.dupe(u8, id_json.string) orelse return booru.BooruError.OutOfMemory;
-            const file_url = allocator.dupe(u8, file_url_json.string) orelse return booru.BooruError.OutOfMemory;
+            const id = id_json.integer;
+            const file_url = allocator.dupe(u8, file_url_json.string) catch return booru.BooruError.OutOfMemory;
 
             posts[i] = booru.Post{ .id = id, .file_url = file_url };
         }
@@ -75,8 +75,8 @@ pub const Gelbooru = struct {
     pub fn instance() booru.Booru {
         return booru.Booru{
             .metadata = metadata,
-            .buildBulkURL = buildBulkURL,
-            .parseBulkPost = parseBulkPost,
+            .buildBulkURL = &buildBulkURL,
+            .parseBulkPost = &parseBulkPost,
         };
     }
 };

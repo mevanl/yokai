@@ -17,5 +17,8 @@ pub fn build(b: *std.Build) void {
         .root_module = exe_module,
     });
 
+    const clap = b.dependency("clap", .{});
+    exe.root_module.addImport("clap", clap.module("clap"));
+
     b.installArtifact(exe);
 }
