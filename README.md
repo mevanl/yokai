@@ -8,10 +8,10 @@
 ## Feature Release Plan
 - [x] MVP, Gelbooru Tag Bulk downloads
 - [x] Safebooru Bulk downloads 
-- [x] Danbooru  Bulk downloads 
+- [x] Danbooru Bulk downloads 
+- [ ] Multithreading for bulk downloads   
 - [ ] Single post downloads
-- [ ] Multithreading 
-- [ ] Config file, custom naming, custom directory'
+- [ ] Config file, custom naming, custom directory
 - [ ] Implement token based query 
 
 
