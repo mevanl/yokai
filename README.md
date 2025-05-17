@@ -5,6 +5,11 @@
 - :flags: Supports multiple Booru sites
 - :pencil2: Custom file naming 
 
+## Currently Supported booru sites 
+- Gelbooru
+- Danbooru 
+- Safebooru 
+
 ## Feature Release Plan
 - [x] MVP, Gelbooru Tag Bulk downloads
 - [x] Safebooru Bulk downloads 
