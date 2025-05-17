@@ -5,10 +5,13 @@
 - :flags: Supports multiple Booru sites
 - :pencil2: Custom file naming 
 
-## Currently Supported booru sites 
-- Gelbooru
-- Danbooru 
-- Safebooru 
+## Currently Supported
+|   Source  |       Bulk DL      | Single DL |
+|:---------:|:------------------:|:---------:|
+| Gelbooru  | :white_check_mark: |           |
+| Safebooru | :white_check_mark: |           |
+| Danbooru  | :white_check_mark: |           |
+
 
 ## Feature Release Plan
 - [x] MVP, Gelbooru Tag Bulk downloads
