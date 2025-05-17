@@ -1,7 +1,9 @@
 # Zooru
 > A blazingly fast booru downloader 
 
-- :zap: Built with Zig
+- :zap: Built with 100% Zig
+     - Multithreaded downloads
+     - Site-by-site optimization 
 - :flags: Supports multiple Booru sites
 - :pencil2: Custom file naming 
 
