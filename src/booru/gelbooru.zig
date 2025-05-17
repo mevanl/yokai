@@ -59,7 +59,7 @@ pub const Gelbooru = struct {
             const id_json = post_obj.get("id") orelse return booru.BooruError.ParsingFailed;
             const file_url_json = post_obj.get("file_url") orelse return booru.BooruError.ParsingFailed;
 
-            // check both are strings
+            // check valid type
             if (id_json != .integer or file_url_json != .string) return booru.BooruError.ParsingFailed;
 
             // duplicate them
