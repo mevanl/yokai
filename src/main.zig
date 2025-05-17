@@ -77,7 +77,7 @@ pub fn main() !void {
         const gel = gelbooru.Gelbooru.instance();
 
         var client = booru_client.Client.init(allocator, &gel);
-        defer client.deinit();
+        // defer client.deinit();
 
         client.downloadPosts(client.fetchBulkPosts(tags.?) catch return) catch |err| {
             stderr.print("Failed downloading post (Source: {s}, tags: {s})\nError: {any}\n", .{ source.?, tags.?, err }) catch {
@@ -89,7 +89,7 @@ pub fn main() !void {
         const safe = safebooru.Safebooru.instance();
 
         var client = booru_client.Client.init(allocator, &safe);
-        defer client.deinit();
+        // defer client.deinit();
 
         client.downloadPosts(client.fetchBulkPosts(tags.?) catch return) catch |err| {
             stderr.print("Failed downloading post (Source: {s}, tags: {s})\nError: {any}\n", .{ source.?, tags.?, err }) catch {
@@ -101,7 +101,7 @@ pub fn main() !void {
         const dan = danbooru.Danbooru.instance();
 
         var client = booru_client.Client.init(allocator, &dan);
-        defer client.deinit();
+        // defer client.deinit();
 
         client.downloadPosts(client.fetchBulkPosts(tags.?) catch return) catch |err| {
             stderr.print("Failed downloading post (Source: {s}, tags: {s})\nError: {any}\n", .{ source.?, tags.?, err }) catch {

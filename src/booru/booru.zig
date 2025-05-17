@@ -36,6 +36,7 @@ pub const BooruError = error{
     ParsingFailed,
     OutOfMemory,
     NoPostFound,
+    ThreadError,
 
     RequestFailed,
     ResponseReadFailed,
