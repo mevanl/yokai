@@ -7,10 +7,10 @@
 
 ## Feature Release Plan
 - [x] MVP, Gelbooru Tag Bulk downloads
-- [] Safebooru and Danbooru Bulk downloads
-- [] Single post downloads
-- [] Multithreading 
-- [] Config file, custom naming, custom directory
+- [ ] Safebooru and Danbooru Bulk downloads
+- [ ] Single post downloads
+- [ ] Multithreading 
+- [ ] Config file, custom naming, custom directory
 
 ## Building 
 Requirements
