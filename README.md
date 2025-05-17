@@ -10,7 +10,9 @@
 - [ ] Safebooru and Danbooru Bulk downloads
 - [ ] Single post downloads
 - [ ] Multithreading 
-- [ ] Config file, custom naming, custom directory
+- [ ] Config file, custom naming, custom directory'
+- [ ] Implement token based query 
+
 
 ## Building 
 Requirements
